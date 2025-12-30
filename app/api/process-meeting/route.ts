@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { Client } from "@notionhq/client";
+import { MEETING_ANALYSIS_PROMPT, MeetingAnalysis } from "@/lib/prompts";
 
 // Initialize Groq client
 const groq = new Groq({
@@ -14,14 +15,6 @@ const notion = new Client({
 
 const NOTION_DATABASE_ID =
   process.env.NOTION_DATABASE_ID || "2d91b61a25328092a1bdcb649dbacdb2";
-
-// Types for the meeting analysis response
-interface MeetingAnalysis {
-  summary: string;
-  actionItems: string[];
-  sentiment: "positive" | "neutral" | "negative";
-  sentimentExplanation: string;
-}
 
 interface ProcessingResponse {
   success: boolean;
@@ -116,7 +109,7 @@ async function transcribeAudio(audioFile: File): Promise<string> {
   const transcription = await groq.audio.transcriptions.create({
     file: audioFile,
     model: "whisper-large-v3",
-    language: "en", // Can be made dynamic
+    // No language specified = auto-detect (supports German, English, etc.)
     response_format: "text",
   });
 
@@ -125,26 +118,11 @@ async function transcribeAudio(audioFile: File): Promise<string> {
 
 // Step 1.3: Analyze meeting using Groq LLM
 async function analyzeMeeting(transcript: string): Promise<MeetingAnalysis> {
-  const systemPrompt = `You are an executive assistant specializing in meeting analysis.
-Analyze the following meeting transcript and extract:
-
-1. **Summary**: A concise 3-sentence executive summary of what was discussed.
-2. **Action Items**: A list of specific tasks that were assigned or need to be done. Each should include WHO needs to do WHAT.
-3. **Sentiment**: The overall emotional tone of the meeting (positive, neutral, or negative) with a brief explanation.
-
-Respond ONLY with valid JSON in this exact format:
-{
-  "summary": "string",
-  "actionItems": ["string", "string"],
-  "sentiment": "positive" | "neutral" | "negative",
-  "sentimentExplanation": "string"
-}`;
-
   const completion = await groq.chat.completions.create({
     model: "llama-3.3-70b-versatile", // Fast and capable
     messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: `Meeting Transcript:\n\n${transcript}` },
+      { role: "system", content: MEETING_ANALYSIS_PROMPT },
+      { role: "user", content: `Transcript:\n\n${transcript}` },
     ],
     temperature: 0.3, // Lower for more consistent output
     max_tokens: 1024,
@@ -180,15 +158,15 @@ Mike: I'll coordinate with engineering to make sure the API is stable by next we
 Sarah: Perfect. Let's reconvene next Monday to check progress. I'm feeling good about this launch!`,
       analysis: {
         summary:
-          "The team discussed the Q1 product launch timeline and confirmed they are on track for the January 15th milestone. Design work is complete, and marketing materials are ready pending brand approval. The team will reconvene Monday to review progress.",
+          "The team discussed the Q1 product launch timeline and confirmed they are on track for the January 15th milestone. Design work is complete, and marketing materials are ready pending brand approval.",
         actionItems: [
-          "Lisa: Get final approval from brand team by Friday",
-          "Mike: Coordinate with engineering for API stability by next week",
-          "All: Reconvene Monday to check progress",
+          "Lisa to get final approval from brand team by Friday",
+          "Mike to coordinate with engineering for API stability by next week",
+          "Team to reconvene Monday to check progress",
         ],
         sentiment: "positive",
         sentimentExplanation:
-          "The meeting had an optimistic and productive tone. Participants reported being on track, and the leader expressed confidence about the launch.",
+          "The meeting had an optimistic and productive tone with clear action items and confident leadership.",
       },
       notionPageUrl: "https://notion.so/demo-page",
     },
@@ -204,8 +182,9 @@ async function createNotionPage(
   const today = new Date().toISOString().split("T")[0];
   const meetingTitle = `Meeting Notes - ${today}`;
 
-  // Map sentiment to match your Notion select options (lowercase)
-  const sentimentValue = analysis.sentiment; // "positive", "neutral", or "negative"
+  // Capitalize sentiment for Notion (positive -> Positive)
+  const notionSentiment =
+    analysis.sentiment.charAt(0).toUpperCase() + analysis.sentiment.slice(1);
 
   const response = await notion.pages.create({
     parent: {
