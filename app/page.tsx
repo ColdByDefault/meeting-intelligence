@@ -6,6 +6,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { MeetingUploader } from "@/components/meeting-uploader";
 import { NotionSetupInfo } from "@/components/notion-setup-info";
 import { Button } from "@/components/ui/button";
@@ -180,21 +181,30 @@ export default function Home() {
             <ComingSoonPill text="📧 Zusammenfassung per E-Mail an Teilnehmer" />
             <ComingSoonPill text="📊 An CRM senden" />
             <ComingSoonPill text="📅 Kalenderaufgaben erstellen" />
-            <ComingSoonPill text="💬 Slack-Benachrichtigungen" />
           </div>
         </section>
       </main>
 
       {/* Footer */}
       <footer className="border-t mt-20 py-8">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Erstellt mit Next.js, Groq Cloud und Notion API</p>
-          <p className="mt-2">
-            Ein Portfolio-Demo von{" "}
-            <a href="#" className="text-primary hover:underline">
-              Yazan
-            </a>
-          </p>
+        <div className="container mx-auto px-4 text-sm text-muted-foreground">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p>Erstellt mit Next.js, Groq Cloud und Notion API</p>
+            <p>
+              Ein Portfolio-Demo von{" "}
+              <Link
+                href="https://coldbydefault.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Yazan Abo Ayash
+              </Link>
+            </p>
+            <p className="text-xs">
+              © {new Date().getFullYear()} ColdByDefault. All Rights Reserved.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
