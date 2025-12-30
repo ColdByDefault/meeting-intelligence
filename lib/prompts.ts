@@ -1,4 +1,9 @@
 /**
+ * @author ColdByDefault
+ * @copyright  2026 ColdByDefault. All Rights Reserved.
+ * @license - All Rights Reserved
+ */
+/**
  * System Prompts for Meeting Intelligence
  *
  * This file contains all AI prompts used in the application.

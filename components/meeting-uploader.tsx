@@ -1,3 +1,8 @@
+/**
+ * @author ColdByDefault
+ * @copyright  2026 ColdByDefault. All Rights Reserved.
+ * @license - All Rights Reserved
+ */ 
 "use client";
 
 import { useCallback, useState } from "react";
@@ -42,17 +47,18 @@ interface MeetingUploaderProps {
   demoMode?: boolean;
   notionDatabaseId?: string;
   maxDurationSeconds?: number;
+  disabled?: boolean;
   onComplete?: (result: ProcessingResult) => void;
 }
 
 const statusMessages: Record<ProcessingStatus, string> = {
-  idle: "Drop your audio file here",
-  uploading: "Uploading file...",
-  transcribing: "Transcribing audio with AI...",
-  analyzing: "Analyzing meeting content...",
-  "creating-notion": "Creating Notion page...",
-  complete: "Processing complete!",
-  error: "Something went wrong",
+  idle: "Legen Sie Ihre Audiodatei hier ab",
+  uploading: "Datei wird hochgeladen...",
+  transcribing: "Audio wird mit KI transkribiert...",
+  analyzing: "Meeting-Inhalt wird analysiert...",
+  "creating-notion": "Notion-Seite wird erstellt...",
+  complete: "Verarbeitung abgeschlossen!",
+  error: "Etwas ist schiefgelaufen",
 };
 
 const statusProgress: Record<ProcessingStatus, number> = {
@@ -69,6 +75,7 @@ export function MeetingUploader({
   demoMode = false,
   notionDatabaseId,
   maxDurationSeconds = 60,
+  disabled = false,
   onComplete,
 }: MeetingUploaderProps) {
   const [status, setStatus] = useState<ProcessingStatus>("idle");
@@ -103,9 +110,9 @@ export function MeetingUploader({
         const duration = await checkAudioDuration(file);
         if (duration > maxDurationSeconds) {
           throw new Error(
-            `Audio too long! Maximum ${maxDurationSeconds} seconds allowed. Your file is ${Math.round(
+            `Audio zu lang! Maximal ${maxDurationSeconds} Sekunden erlaubt. Ihre Datei ist ${Math.round(
               duration
-            )} seconds.`
+            )} Sekunden lang.`
           );
         }
       }
@@ -141,7 +148,9 @@ export function MeetingUploader({
       const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error || "Failed to process meeting");
+        throw new Error(
+          data.error || "Meeting konnte nicht verarbeitet werden"
+        );
       }
 
       // Step 4: Creating Notion page
@@ -155,7 +164,9 @@ export function MeetingUploader({
     } catch (err) {
       setStatus("error");
       setError(
-        err instanceof Error ? err.message : "An unexpected error occurred"
+        err instanceof Error
+          ? err.message
+          : "Ein unerwarteter Fehler ist aufgetreten"
       );
     }
   };
@@ -177,7 +188,9 @@ export function MeetingUploader({
       "audio/*": [".mp3", ".wav", ".m4a", ".mp4", ".mpeg", ".webm"],
     },
     maxFiles: 1,
-    disabled: status !== "idle" && status !== "complete" && status !== "error",
+    disabled:
+      disabled ||
+      (status !== "idle" && status !== "complete" && status !== "error"),
   });
 
   const reset = () => {
@@ -188,6 +201,7 @@ export function MeetingUploader({
   };
 
   const isProcessing = !["idle", "complete", "error"].includes(status);
+  const isDisabled = disabled || isProcessing;
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -197,7 +211,7 @@ export function MeetingUploader({
         className={cn(
           "border-2 border-dashed cursor-pointer transition-all duration-200",
           isDragActive && "border-primary bg-primary/5",
-          isProcessing && "cursor-not-allowed opacity-70",
+          isDisabled && "cursor-not-allowed opacity-70",
           status === "complete" && "border-green-500 bg-green-500/5",
           status === "error" && "border-red-500 bg-red-500/5"
         )}
@@ -242,7 +256,7 @@ export function MeetingUploader({
           {/* Idle State Instructions */}
           {status === "idle" && (
             <p className="text-sm text-muted-foreground">
-              Supports MP3, WAV, M4A files (max 25MB)
+              Unterstützt MP3, WAV, M4A Dateien (max. 25MB)
             </p>
           )}
 
@@ -268,7 +282,7 @@ export function MeetingUploader({
               variant="outline"
               className="mt-4"
             >
-              Upload Another File
+              Weitere Datei hochladen
             </Button>
           )}
         </CardContent>
@@ -278,7 +292,7 @@ export function MeetingUploader({
       {demoMode && (
         <div className="flex justify-center">
           <Badge variant="secondary" className="text-xs">
-            🎭 Demo Mode - Using sample data
+            🎭 Demo-Modus - Beispieldaten werden verwendet
           </Badge>
         </div>
       )}
@@ -310,7 +324,7 @@ function ResultsCard({ result }: { result: ProcessingResult }) {
         {/* Summary */}
         <div>
           <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
-            📋 Executive Summary
+            📋 Zusammenfassung
           </h4>
           <p className="text-muted-foreground">{result.analysis.summary}</p>
         </div>
@@ -318,7 +332,7 @@ function ResultsCard({ result }: { result: ProcessingResult }) {
         {/* Action Items */}
         <div>
           <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
-            ✅ Action Items
+            ✅ Aktionspunkte
           </h4>
           <ul className="space-y-2">
             {result.analysis.actionItems.map((item, index) => (
@@ -333,10 +347,14 @@ function ResultsCard({ result }: { result: ProcessingResult }) {
         {/* Sentiment */}
         <div>
           <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
-            Sentiment
+            Stimmung
             <Badge className={sentimentColor[result.analysis.sentiment]}>
               {sentimentEmoji[result.analysis.sentiment]}{" "}
-              {result.analysis.sentiment}
+              {result.analysis.sentiment === "positive"
+                ? "positiv"
+                : result.analysis.sentiment === "negative"
+                ? "negativ"
+                : "neutral"}
             </Badge>
           </h4>
           <p className="text-muted-foreground">
@@ -353,7 +371,7 @@ function ResultsCard({ result }: { result: ProcessingResult }) {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-primary hover:underline"
             >
-              📝 View in Notion →
+              📝 In Notion anzeigen →
             </a>
           </div>
         )}

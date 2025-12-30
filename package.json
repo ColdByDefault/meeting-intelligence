@@ -1,7 +1,30 @@
 {
   "name": "meeting-intelligence",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Auto-Meeting Intelligence - Transform voice memos into actionable Notion notes in 30 seconds. AI-powered transcription, summarization, and action item extraction.",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "author": {
+    "name": "Yazan Abo Ayash",
+    "url": "https://github.com/coldbydefault"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/coldbydefault/meeting-intelligence"
+  },
+  "keywords": [
+    "meeting-intelligence",
+    "ai",
+    "transcription",
+    "notion",
+    "automation",
+    "nextjs",
+    "groq",
+    "whisper"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

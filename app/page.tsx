@@ -1,3 +1,8 @@
+/**
+ * @author ColdByDefault
+ * @copyright  2026 ColdByDefault. All Rights Reserved.
+ * @license - All Rights Reserved
+ */
 "use client";
 
 import { useState } from "react";
@@ -6,12 +11,19 @@ import { NotionSetupInfo } from "@/components/notion-setup-info";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mic, Sparkles, FileText, Zap, Info } from "lucide-react";
+import { Mic, Sparkles, FileText, Zap, Info, AlertCircle } from "lucide-react";
+
+// Check if we're in production mode (users must provide their own Notion ID)
+const isProduction = process.env.NEXT_PUBLIC_APP_ENV === "production";
 
 export default function Home() {
   const [demoMode, setDemoMode] = useState(true);
   const [notionDatabaseId, setNotionDatabaseId] = useState("");
   const [showNotionHelp, setShowNotionHelp] = useState(false);
+
+  // In production, users MUST provide their own Notion Database ID when demo is off
+  const notionIdRequired = isProduction && !demoMode;
+  const notionIdMissing = notionIdRequired && !notionDatabaseId.trim();
 
   return (
     <div className="min-h-screen bg-linear-to-b from-zinc-50 to-white dark:from-zinc-950 dark:to-zinc-900">
@@ -20,7 +32,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Mic className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">Meeting Intelligence</span>
+            <span className="font-bold text-xl">Meeting-Intelligenz</span>
           </div>
           {/* Demo Mode Toggle - Moved to navbar */}
           <div className="flex items-center gap-2">
@@ -42,38 +54,38 @@ export default function Home() {
       <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-            From Voice Memo to{" "}
-            <span className="text-primary">Notion Notes</span>
+            Von der Sprachnachricht zu{" "}
+            <span className="text-primary">Notion-Notizen</span>
             <br />
-            in 30 Seconds
+            in 30 Sekunden
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-            Upload your meeting recording and let AI extract action items,
-            summaries, and insights—automatically synced to your Notion
-            workspace.
+            Laden Sie Ihre Meeting-Aufnahme hoch und lassen Sie die KI
+            Aktionspunkte, Zusammenfassungen und Erkenntnisse
+            extrahieren—automatisch mit Ihrem Notion-Workspace synchronisiert.
           </p>
 
           {/* Feature Pills */}
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             <FeaturePill
               icon={<Sparkles className="h-4 w-4" />}
-              text="AI-Powered Analysis"
+              text="KI-gestützte Analyse"
             />
             <FeaturePill
               icon={<FileText className="h-4 w-4" />}
-              text="Notion Integration"
+              text="Notion-Integration"
             />
             <FeaturePill
               icon={<Zap className="h-4 w-4" />}
-              text="60 Second Processing"
+              text="60 Sekunden Verarbeitung"
             />
           </div>
 
           {/* Demo Mode Info */}
           {demoMode && (
             <p className="text-sm text-muted-foreground mb-4">
-              🎭 <strong>Demo Mode:</strong> Upload any audio to see sample
-              results
+              🎭 <strong>Demo-Modus:</strong> Laden Sie eine beliebige
+              Audiodatei hoch, um Beispielergebnisse zu sehen
             </p>
           )}
 
@@ -82,12 +94,15 @@ export default function Home() {
             <div className="max-w-md mx-auto mb-8 space-y-3">
               <div className="flex items-center gap-2">
                 <Label htmlFor="notion-id" className="text-sm font-medium">
-                  Your Notion Database ID
+                  Ihre Notion-Datenbank-ID
+                  {isProduction && (
+                    <span className="text-destructive ml-1">*</span>
+                  )}
                 </Label>
                 <button
                   onClick={() => setShowNotionHelp(!showNotionHelp)}
                   className="text-muted-foreground hover:text-primary transition-colors"
-                  title="How to get your Notion Database ID"
+                  title="So erhalten Sie Ihre Notion-Datenbank-ID"
                 >
                   <Info className="h-4 w-4" />
                 </button>
@@ -98,10 +113,19 @@ export default function Home() {
                 placeholder="e.g., 2d91b61a25328092a1bdcb649dbacdb2"
                 value={notionDatabaseId}
                 onChange={(e) => setNotionDatabaseId(e.target.value)}
-                className="font-mono text-sm"
+                className={`font-mono text-sm ${
+                  notionIdMissing ? "border-destructive" : ""
+                }`}
               />
+              {notionIdMissing && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Notion-Datenbank-ID ist erforderlich, um Ihre Audiodatei zu
+                  verarbeiten
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
-                ⏱️ Max audio length: 1 minute
+                ⏱️ Max. Audiolänge: 1 Minute
               </p>
             </div>
           )}
@@ -117,41 +141,46 @@ export default function Home() {
           demoMode={demoMode}
           notionDatabaseId={!demoMode ? notionDatabaseId : undefined}
           maxDurationSeconds={60}
+          disabled={notionIdMissing}
         />
 
         {/* How It Works Section */}
         <section className="mt-20 max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">How It Works</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">
+            So funktioniert es
+          </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <StepCard
               number="1"
-              title="Upload Audio"
-              description="Drop your meeting recording (MP3, M4A, WAV)"
+              title="Audio hochladen"
+              description="Legen Sie Ihre Meeting-Aufnahme ab (MP3, M4A, WAV)"
             />
             <StepCard
               number="2"
-              title="AI Processing"
-              description="Whisper transcribes, LLM analyzes content"
+              title="KI-Verarbeitung"
+              description="Whisper transkribiert, LLM analysiert den Inhalt"
             />
             <StepCard
               number="3"
-              title="Notion Page"
-              description="Summary & action items appear in your workspace"
+              title="Notion-Seite"
+              description="Zusammenfassung & Aktionspunkte erscheinen in Ihrem Workspace"
             />
           </div>
         </section>
 
         {/* Future Features Preview */}
         <section className="mt-20 max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-4">Coming Soon</h2>
+          <h2 className="text-2xl font-bold text-center mb-4">
+            Demnächst verfügbar
+          </h2>
           <p className="text-center text-muted-foreground mb-8">
-            Extensible by design—add your own integrations
+            Erweiterbar konzipiert—fügen Sie Ihre eigenen Integrationen hinzu
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <ComingSoonPill text="📧 Email Summary to Attendees" />
-            <ComingSoonPill text="📊 Send to CRM" />
-            <ComingSoonPill text="📅 Create Calendar Tasks" />
-            <ComingSoonPill text="💬 Slack Notifications" />
+            <ComingSoonPill text="📧 Zusammenfassung per E-Mail an Teilnehmer" />
+            <ComingSoonPill text="📊 An CRM senden" />
+            <ComingSoonPill text="📅 Kalenderaufgaben erstellen" />
+            <ComingSoonPill text="💬 Slack-Benachrichtigungen" />
           </div>
         </section>
       </main>
@@ -159,9 +188,9 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t mt-20 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Built with Next.js, Groq Cloud, and Notion API</p>
+          <p>Erstellt mit Next.js, Groq Cloud und Notion API</p>
           <p className="mt-2">
-            A portfolio demo by{" "}
+            Ein Portfolio-Demo von{" "}
             <a href="#" className="text-primary hover:underline">
               Yazan
             </a>

@@ -1,3 +1,8 @@
+/**
+ * @author ColdByDefault
+ * @copyright  2026 ColdByDefault. All Rights Reserved.
+ * @license - All Rights Reserved
+ */
 "use client";
 
 import { X, ExternalLink } from "lucide-react";
@@ -14,7 +19,7 @@ export function NotionSetupInfo({ onClose }: NotionSetupInfoProps) {
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl">
-            🔗 How to Connect Your Notion
+            🔗 So verbinden Sie Ihr Notion
           </CardTitle>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -27,10 +32,10 @@ export function NotionSetupInfo({ onClose }: NotionSetupInfoProps) {
               <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
                 1
               </span>
-              Create a Notion Integration
+              Notion-Integration erstellen
             </h3>
             <p className="text-sm text-muted-foreground ml-8">
-              Go to{" "}
+              Gehen Sie zu{" "}
               <a
                 href="https://www.notion.so/my-integrations"
                 target="_blank"
@@ -40,12 +45,12 @@ export function NotionSetupInfo({ onClose }: NotionSetupInfoProps) {
                 notion.so/my-integrations
                 <ExternalLink className="h-3 w-3" />
               </a>{" "}
-              and click <strong>&quot;New integration&quot;</strong>
+              und klicken Sie auf <strong>&quot;Neue Integration&quot;</strong>
             </p>
             <ul className="text-sm text-muted-foreground ml-8 list-disc list-inside space-y-1">
-              <li>Name it &quot;Meeting Intelligence&quot;</li>
-              <li>Select your workspace</li>
-              <li>Click &quot;Submit&quot;</li>
+              <li>Nennen Sie sie &quot;Meeting-Intelligenz&quot;</li>
+              <li>Wählen Sie Ihren Workspace</li>
+              <li>Klicken Sie auf &quot;Absenden&quot;</li>
             </ul>
           </div>
 
@@ -55,11 +60,12 @@ export function NotionSetupInfo({ onClose }: NotionSetupInfoProps) {
               <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
                 2
               </span>
-              Create a Database for Meeting Notes
+              Datenbank für Meeting-Notizen erstellen
             </h3>
             <p className="text-sm text-muted-foreground ml-8">
-              In Notion, create a new <strong>full-page database</strong> (not
-              inline). This is where your meeting notes will be saved.
+              Erstellen Sie in Notion eine neue{" "}
+              <strong>ganzseitige Datenbank</strong> (nicht inline). Hier werden
+              Ihre Meeting-Notizen gespeichert.
             </p>
           </div>
 
@@ -69,20 +75,22 @@ export function NotionSetupInfo({ onClose }: NotionSetupInfoProps) {
               <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
                 3
               </span>
-              Connect Database to Integration
+              Datenbank mit Integration verbinden
             </h3>
             <p className="text-sm text-muted-foreground ml-8">
-              On your database page:
+              Auf Ihrer Datenbankseite:
             </p>
             <ul className="text-sm text-muted-foreground ml-8 list-disc list-inside space-y-1">
               <li>
-                Click the <strong>&quot;...&quot;</strong> menu (top right)
+                Klicken Sie auf das <strong>&quot;...&quot;</strong>-Menü (oben
+                rechts)
               </li>
               <li>
-                Go to <strong>&quot;Add connections&quot;</strong>
+                Gehen Sie zu{" "}
+                <strong>&quot;Verbindungen hinzufügen&quot;</strong>
               </li>
               <li>
-                Select <strong>&quot;Meeting Intelligence&quot;</strong>
+                Wählen Sie <strong>&quot;Meeting-Intelligenz&quot;</strong>
               </li>
             </ul>
           </div>
@@ -93,15 +101,15 @@ export function NotionSetupInfo({ onClose }: NotionSetupInfoProps) {
               <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm">
                 4
               </span>
-              Get Your Database ID
+              Ihre Datenbank-ID abrufen
             </h3>
             <p className="text-sm text-muted-foreground ml-8">
-              Copy the URL of your database page. The ID is the part after your
-              workspace name:
+              Kopieren Sie die URL Ihrer Datenbankseite. Die ID ist der Teil
+              nach Ihrem Workspace-Namen:
             </p>
             <div className="ml-8 p-3 bg-muted rounded-lg font-mono text-xs overflow-x-auto">
               <span className="text-muted-foreground">
-                notion.so/yourworkspace/
+                notion.so/ihrworkspace/
               </span>
               <span className="text-primary font-bold">
                 2d91b61a25328092a1bdcb649dbacdb2
@@ -109,27 +117,28 @@ export function NotionSetupInfo({ onClose }: NotionSetupInfoProps) {
               <span className="text-muted-foreground">?v=...</span>
             </div>
             <p className="text-sm text-muted-foreground ml-8">
-              Copy just the <strong>32-character ID</strong> and paste it in the
-              input field.
+              Kopieren Sie nur die <strong>32-stellige ID</strong> und fügen Sie
+              sie in das Eingabefeld ein.
             </p>
           </div>
 
           {/* Important Note */}
           <div className="p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
             <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-2">
-              ⚠️ Important
+              ⚠️ Wichtig
             </h4>
             <p className="text-sm text-amber-700 dark:text-amber-300">
-              For this demo to write to YOUR Notion, you would need to provide
-              your own Notion API key. Currently, this app uses the owner&apos;s
-              integration. Contact the owner if you want a fully personalized
-              setup.
+              Damit diese Demo in IHR Notion schreiben kann, müssten Sie Ihren
+              eigenen Notion-API-Schlüssel bereitstellen. Derzeit verwendet
+              diese App die Integration des Eigentümers. Kontaktieren Sie den
+              Eigentümer, wenn Sie eine vollständig personalisierte Einrichtung
+              wünschen.
             </p>
           </div>
 
           {/* Close Button */}
           <div className="flex justify-end pt-4">
-            <Button onClick={onClose}>Got it!</Button>
+            <Button onClick={onClose}>Verstanden!</Button>
           </div>
         </CardContent>
       </Card>

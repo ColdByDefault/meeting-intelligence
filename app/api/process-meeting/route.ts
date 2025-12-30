@@ -1,3 +1,8 @@
+/**
+ * @author ColdByDefault
+ * @copyright  2026 ColdByDefault. All Rights Reserved.
+ * @license - All Rights Reserved
+ */
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { Client } from "@notionhq/client";
@@ -13,8 +18,10 @@ const notion = new Client({
   auth: process.env.NOTION_API_KEY,
 });
 
-const NOTION_DATABASE_ID =
-  process.env.NOTION_DATABASE_ID || "2d91b61a25328092a1bdcb649dbacdb2";
+// In development, use the configured database ID as fallback
+// In production, users MUST provide their own database ID
+const isProduction = process.env.NEXT_PUBLIC_APP_ENV === "production";
+const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
 
 interface ProcessingResponse {
   success: boolean;
@@ -44,7 +51,7 @@ export async function POST(
 
     if (!audioFile) {
       return NextResponse.json(
-        { success: false, error: "No audio file provided" },
+        { success: false, error: "Keine Audiodatei bereitgestellt" },
         { status: 400 }
       );
     }
@@ -61,7 +68,8 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid file type. Please upload MP3, WAV, or M4A files.",
+          error:
+            "Ungültiger Dateityp. Bitte laden Sie MP3-, WAV- oder M4A-Dateien hoch.",
         },
         { status: 400 }
       );
@@ -74,9 +82,27 @@ export async function POST(
     const analysis = await analyzeMeeting(transcript);
 
     // Step 3: Send to Notion
-    // Use custom database ID from header if provided, otherwise use default
+    // Use custom database ID from header if provided
     const customDatabaseId = request.headers.get("x-notion-database-id");
-    const databaseId = customDatabaseId || NOTION_DATABASE_ID;
+
+    // In production, users MUST provide their own database ID
+    // In development, fall back to the configured database ID
+    let databaseId: string | undefined;
+    if (isProduction) {
+      if (!customDatabaseId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Notion-Datenbank-ID erforderlich. Bitte geben Sie Ihre eigene Notion-Datenbank-ID an.",
+          },
+          { status: 400 }
+        );
+      }
+      databaseId = customDatabaseId;
+    } else {
+      databaseId = customDatabaseId || NOTION_DATABASE_ID;
+    }
 
     let notionPageUrl: string | undefined;
     if (process.env.NOTION_API_KEY && databaseId) {
@@ -97,7 +123,9 @@ export async function POST(
       {
         success: false,
         error:
-          error instanceof Error ? error.message : "Failed to process meeting",
+          error instanceof Error
+            ? error.message
+            : "Meeting konnte nicht verarbeitet werden",
       },
       { status: 500 }
     );
@@ -131,7 +159,7 @@ async function analyzeMeeting(transcript: string): Promise<MeetingAnalysis> {
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {
-    throw new Error("No response from AI analysis");
+    throw new Error("Keine Antwort von der KI-Analyse");
   }
 
   return JSON.parse(content) as MeetingAnalysis;
@@ -143,30 +171,30 @@ function getDemoResponse(): ProcessingResponse {
     success: true,
     isDemo: true,
     data: {
-      transcript: `[Demo Transcript]
+      transcript: `[Demo-Transkript]
       
-Sarah: Good morning everyone. Let's discuss the Q1 product launch timeline.
+Sarah: Guten Morgen zusammen. Lassen Sie uns den Zeitplan für die Produkteinführung im ersten Quartal besprechen.
 
-Mike: I've finished the initial designs. We're on track for the January 15th milestone.
+Mike: Ich habe die ersten Designs fertiggestellt. Wir sind auf Kurs für den Meilenstein am 15. Januar.
 
-Sarah: Excellent! What about the marketing materials?
+Sarah: Ausgezeichnet! Was ist mit den Marketingmaterialien?
 
-Lisa: The social media campaign is ready. I just need final approval from the brand team by Friday.
+Lisa: Die Social-Media-Kampagne ist bereit. Ich brauche nur noch die endgültige Freigabe vom Markenteam bis Freitag.
 
-Mike: I'll coordinate with engineering to make sure the API is stable by next week.
+Mike: Ich werde mich mit der Technik abstimmen, um sicherzustellen, dass die API bis nächste Woche stabil ist.
 
-Sarah: Perfect. Let's reconvene next Monday to check progress. I'm feeling good about this launch!`,
+Sarah: Perfekt. Lassen Sie uns am Montag wieder zusammenkommen, um den Fortschritt zu überprüfen. Ich habe ein gutes Gefühl bei diesem Launch!`,
       analysis: {
         summary:
-          "The team discussed the Q1 product launch timeline and confirmed they are on track for the January 15th milestone. Design work is complete, and marketing materials are ready pending brand approval.",
+          "Das Team besprach den Zeitplan für die Produkteinführung im ersten Quartal und bestätigte, dass sie auf Kurs für den Meilenstein am 15. Januar sind. Die Designarbeit ist abgeschlossen, und die Marketingmaterialien sind bereit und warten auf die Markenfreigabe.",
         actionItems: [
-          "Lisa to get final approval from brand team by Friday",
-          "Mike to coordinate with engineering for API stability by next week",
-          "Team to reconvene Monday to check progress",
+          "Lisa soll die endgültige Freigabe vom Markenteam bis Freitag einholen",
+          "Mike soll sich mit der Technik für API-Stabilität bis nächste Woche abstimmen",
+          "Team soll sich am Montag wieder treffen, um den Fortschritt zu überprüfen",
         ],
         sentiment: "positive",
         sentimentExplanation:
-          "The meeting had an optimistic and productive tone with clear action items and confident leadership.",
+          "Das Meeting hatte einen optimistischen und produktiven Ton mit klaren Aktionspunkten und selbstbewusster Führung.",
       },
       notionPageUrl: "https://notion.so/demo-page",
     },
@@ -180,7 +208,7 @@ async function createNotionPage(
   databaseId: string
 ): Promise<string> {
   const today = new Date().toISOString().split("T")[0];
-  const meetingTitle = `Meeting Notes - ${today}`;
+  const meetingTitle = `Meeting-Notizen - ${today}`;
 
   // Capitalize sentiment for Notion (positive -> Positive)
   const notionSentiment =
@@ -211,8 +239,11 @@ async function createNotionPage(
       Sentiment: {
         select: {
           name:
-            analysis.sentiment.charAt(0).toUpperCase() +
-            analysis.sentiment.slice(1), // "Positive", "Neutral", or "Negative"
+            analysis.sentiment === "positive"
+              ? "Positiv"
+              : analysis.sentiment === "negative"
+              ? "Negativ"
+              : "Neutral", // "Positiv", "Neutral", or "Negativ"
         },
       },
     },
@@ -223,7 +254,7 @@ async function createNotionPage(
         object: "block",
         type: "heading_2",
         heading_2: {
-          rich_text: [{ type: "text", text: { content: "Executive Summary" } }],
+          rich_text: [{ type: "text", text: { content: "Zusammenfassung" } }],
         },
       },
       {
@@ -244,7 +275,7 @@ async function createNotionPage(
         object: "block",
         type: "heading_2",
         heading_2: {
-          rich_text: [{ type: "text", text: { content: "Action Items" } }],
+          rich_text: [{ type: "text", text: { content: "Aktionspunkte" } }],
         },
       },
       // Action items as to-do blocks
@@ -271,9 +302,12 @@ async function createNotionPage(
             {
               type: "text",
               text: {
-                content: `Sentiment: ${
-                  analysis.sentiment.charAt(0).toUpperCase() +
-                  analysis.sentiment.slice(1)
+                content: `Stimmung: ${
+                  analysis.sentiment === "positive"
+                    ? "Positiv"
+                    : analysis.sentiment === "negative"
+                    ? "Negativ"
+                    : "Neutral"
                 }`,
               },
             },
@@ -300,7 +334,9 @@ async function createNotionPage(
         object: "block",
         type: "heading_2",
         heading_2: {
-          rich_text: [{ type: "text", text: { content: "Full Transcript" } }],
+          rich_text: [
+            { type: "text", text: { content: "Vollständiges Transkript" } },
+          ],
         },
       },
       {
